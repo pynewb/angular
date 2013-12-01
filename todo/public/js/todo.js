@@ -19,6 +19,13 @@ function TodoCtrl($scope, $http) {
       });
   };
  
+  $scope.updateTodo = function(index) {
+    $http.put('/todo/' + $scope.todos[index]._id, $scope.todos[index])
+      .success(function (data) {
+        $scope.todos = data;
+      });
+  };
+ 
   $scope.remaining = function() {
     var count = 0;
     angular.forEach($scope.todos, function(todo) {

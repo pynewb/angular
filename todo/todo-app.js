@@ -67,6 +67,20 @@ app.delete('/todo/:id', function(req, res) {
     });
 });
 
+app.put('/todo/:id', function(req, res) {
+    console.log('update id ' + req.params.id);
+    db_todo.collection('todos').update({_id: ObjectID.createFromHexString(req.params.id)}, {$set: {done: req.body.done}}, function(err, removed) {
+        if (err) {
+            console.log('err ' + err);
+            return;
+        }
+        if (removed != 1) {
+            console.log('removed ' + removed + ' for id ' + req.params.id);
+        }
+        send_todos(res);
+    });
+});
+
 http.createServer(app).listen(app.get('port'), function() {
     console.log('Express service listening on port ' + app.get('port'));
 });
