@@ -12,6 +12,13 @@ function TodoCtrl($scope, $http) {
     $scope.todoText = '';
   };
  
+  $scope.deleteTodo = function(index) {
+    $http.delete('/todo/' + $scope.todos[index]._id)
+      .success(function (data) {
+        $scope.todos = data;
+      });
+  };
+ 
   $scope.remaining = function() {
     var count = 0;
     angular.forEach($scope.todos, function(todo) {

@@ -11,6 +11,8 @@ app.set('port', 3000);
 
 var db_todo;
 var MongoClient = require('mongodb').MongoClient;
+var ObjectID = require('mongodb').ObjectID;
+
 MongoClient.connect("mongodb://localhost:27017/todo", function(err, db) {
     if (err != null) {
         console.log('err ' + err);
@@ -47,6 +49,20 @@ app.post('/todo', function(req, res) {
         }
         // result is the newly added document
         //console.log(JSON.stringify(result));
+        send_todos(res);
+    });
+});
+
+app.delete('/todo/:id', function(req, res) {
+    console.log('remove id ' + req.params.id);
+    db_todo.collection('todos').remove({_id: ObjectID.createFromHexString(req.params.id)}, function(err, removed) {
+        if (err) {
+            console.log('err ' + err);
+            return;
+        }
+        if (removed != 1) {
+            console.log('removed ' + removed + ' for id ' + req.params.id);
+        }
         send_todos(res);
     });
 });
