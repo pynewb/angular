@@ -15,7 +15,7 @@
         <li ng-repeat="todo in todos">
           <input type="checkbox" ng-model="todo.done" ng-change="updateTodo($index)">
           <span class="done-{{todo.done}}">{{todo.text}}</span>
-          <span><a ng-click="deleteTodo($index)">delete</a></span>
+          <span><a class="pointer" ng-click="deleteTodo($index)">delete</a></span>
         </li>
       </ul>
       <form ng-submit="addTodo()">
