@@ -1,0 +1,42 @@
+http://jsfiddle.net/pynewb/xrFfN/1/
+
+<body ng-app>
+    <div ng-controller="Foo">
+        <table>
+            <tr ng-repeat="name in names">
+                <td>{{name}}</td>
+                <td>
+                    <button ng-click="deleteName(name)">Delete</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="text" ng-model="name" placeholder="enter new name here"></input>
+                </td>
+                <td>
+                    <button ng-click="addName()">Add</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+
+function Foo($scope) {
+    $scope.name = "";
+    $scope.names = ["Ringo", "Paul"];
+    $scope.addName = function () {
+        $scope.names.push($scope.name);
+        $scope.name = "";
+    };
+    $scope.deleteName = function (name) {
+        var idx = $scope.names.indexOf(name);
+        if (idx >= 0) {
+            $scope.names.splice(idx, 1);
+        }
+    };
+}
+
+body {
+    font-family: verdana, arial, helvetica, sans-serif;
+    font-size: small;
+}
