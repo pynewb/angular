@@ -1,0 +1,25 @@
+{
+  "name": "todo",
+  "version": "0.0.1",
+  "homepage": "https://github.com/pynewb/angular",
+  "authors": [
+    "Python Newbie <pynewb@gmail.com>"
+  ],
+  "description": "angular and node todo",
+  "keywords": [
+    "todo"
+  ],
+  "license": "BSD (3 clause)",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": [
+    {"angular": "1.2.3"},
+    {"bootstrap": "3.0.2"}
+  ]
+}
