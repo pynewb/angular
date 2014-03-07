@@ -15,9 +15,10 @@ var ObjectID = require('mongodb').ObjectID;
 
 MongoClient.connect("mongodb://localhost:27017/todo", function(err, db) {
     if (err != null) {
-        console.log('err ' + err);
-        return;
+        console.log('error connecting to mongodb ' + err);
+        process.exit();
     }
+    console.log('connected to mongodb');
     db_todo = db;
 });
 
@@ -26,7 +27,7 @@ function send_todos(res) {
     var todos = [];
     cur.each(function (err, todo) {
         if (err) {
-            console.log('reading results err ' + err);
+            console.log('error reading results from mongodb ' + err);
             return;
         }
         if (todo) {
@@ -44,7 +45,7 @@ app.get('/todo', function(req, res) {
 app.post('/todo', function(req, res) {
     db_todo.collection('todos').insert(req.body, function(err, result) {
         if (err) {
-            console.log('err ' + err);
+            console.log('error inserting to mongodb ' + err);
             return;
         }
         // result is the newly added document
@@ -57,7 +58,7 @@ app.delete('/todo/:id', function(req, res) {
     console.log('remove id ' + req.params.id);
     db_todo.collection('todos').remove({_id: ObjectID.createFromHexString(req.params.id)}, function(err, removed) {
         if (err) {
-            console.log('err ' + err);
+            console.log('error deleting from mongodb ' + err);
             return;
         }
         if (removed != 1) {
@@ -71,7 +72,7 @@ app.put('/todo/:id', function(req, res) {
     console.log('update id ' + req.params.id);
     db_todo.collection('todos').update({_id: ObjectID.createFromHexString(req.params.id)}, {$set: {done: req.body.done}}, function(err, removed) {
         if (err) {
-            console.log('err ' + err);
+            console.log('error updating in mongodb ' + err);
             return;
         }
         if (removed != 1) {
