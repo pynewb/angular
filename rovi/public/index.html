@@ -11,16 +11,21 @@
   <body>
     <div class="container-fluid" ng-controller="SimpsonsCtrl">
       <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-6">
+        </div>
+        <div class="col-md-6">
+          <!--
           <button class="btn" ng-click="getSimpsons()">Get Simpsons</button>
           <button class="btn" ng-click="searchSimpsons()">Search Simpsons</button>
+          -->
           <form class="form-inline" ng-submit="search()">
             <input class="form-control" type="text" placeholder="Enter search" name="q" ng-model="q">
-            <input class="btn btn-default" type="submit" name="submit" id="submit" value="Submit">
+            <input class="btn btn-default" type="submit" name="submit" id="submit" value="Search">
           </form>
         </div>
       </div>
       
+      <!-- TODO: ng-show just hides, but code is still evaluated; is there a better alternative? -->
       <div ng-show="isListMode()">
         <div class="row" ng-repeat="result in getSearchResults()">
           <div class="col-md-4">
@@ -38,10 +43,11 @@
         </div>
       </div>
 
+      <!-- TODO: ng-show just hides, but code is still evaluated; is there a better alternative? -->
       <div ng-show="isDetailMode()">
         <div class="row">
           <div class="col-md-6">
-            <img ng-src={{getFindResult().getImageUrl()}}" width="640" height="480"
+            <img ng-src="{{getFindResult().getImageUrl()}}" width="640" height="480">
           </div>
           <div class="col-md-6">
             {{getFindResult().getName()}}

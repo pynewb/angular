@@ -14,6 +14,7 @@ if (!apikey || !secret) {
 }
 
 var app = express();
+app.use(express.favicon());
 app.use(express.logger('dev'));
 app.use(express.static('public'));
 app.use(express.bodyParser());
@@ -37,7 +38,7 @@ app.get('/simpsons', function(req, res) {
 });
 
 app.get('/find', function(req, res) {
-    var squery = {include:["images","cast","synopsis"], imagesize:"480-720x360-540", apikey:apikey, sig:roviapi.genSig(apikey, secret), format:"json"};    
+    var squery = {include:["images","cast","synopsis","filmography"], imagesize:"480-720x360-540", apikey:apikey, sig:roviapi.genSig(apikey, secret), format:"json"};    
     var type = req.param("type");
     if (type != 'video' && type != 'name') {
         console.log('Unknown type: ' + type);
