@@ -1,0 +1,324 @@
+<!doctype html>
+<html ng-app="app">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Simpsons Experiment</title>
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
+  </head>
+  <body>
+    <div class="container-fluid" ng-controller="SimpsonsCtrl">
+      <div class="row">
+        <div class="col-md-12">
+          <button class="btn" ng-click="getSimpsons()">Get Simpsons</button>
+          <button class="btn" ng-click="searchSimpsons()">Search Simpsons</button>
+          <form class="form-inline" ng-submit="search()">
+            <input class="form-control" type="text" placeholder="Enter search" name="q" ng-model="q">
+            <input class="btn btn-default" type="submit" name="submit" id="submit" value="Submit">
+          </form>
+        </div>
+      </div>
+      
+      <div ng-show="isListMode()">
+        <div class="row" ng-repeat="result in getSearchResults()">
+          <div class="col-md-4">
+           <img ng-src="{{result.getImageUrl()}}" width="320" height="240">
+          </div>
+          <div class="col-md-8">
+            <a ng-click="find(result.getListInfo().type, result.getListInfo().amgMovieId, result.getListInfo().cosmoId)">{{result.getListInfo().name}}</a><br/>
+            {{result.getListInfo().amgMovieId}}<br/>
+            {{result.getListInfo().cosmoId}}<br/>
+            {{result.getListInfo().line2}}<br/>
+            {{result.getListInfo().line3}}<br/>
+            {{result.getListInfo().line4}}<br/>
+            {{result.getListInfo().line5}}<br/>
+          </div>
+        </div>
+      </div>
+
+      <div ng-show="isDetailMode()">
+        <div class="row">
+          <div class="col-md-6">
+            <img ng-src={{getFindResult().getImageUrl()}}" width="640" height="480"
+          </div>
+          <div class="col-md-6">
+            {{getFindResult().getName()}}
+          </div>
+        </div>
+      </div>
+
+      <img ng-src="{{firstImageUrl()}}">
+      <div>
+        <pre>{{resultAsJson()}}</pre>
+      </div>
+    </div>
+    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="bower_components/angular-sanitize/angular-sanitize.min.js"></script>
+    <script type="text/javascript">
+      function getBestImageUrl(images) {
+          var imageUrl = "";
+          if (images) {
+            var imageHeight = 0;
+            images.forEach(function (image) {
+              //console.log('image.height ' + image.height + ' imageHeight ' + imageHeight + ' image.url ' + image.url + ' imageUrl ' + imageUrl);
+              if (image.height > imageHeight && image.height <= 480 && (image.url.lastIndexOf("http", 0) == 0)) {
+                imageUrl = image.url;
+                imageHeight = image.height;
+              }
+            });
+          }
+          //console.log('return imageUrl ' + imageUrl);
+          return imageUrl;
+      }
+      function RoviMovieResult(result) {
+        this.result = result;
+        this.getImageUrl = function() {
+          return getBestImageUrl(this.result.movie.images);
+        };
+        this.getName = function() {
+          return [this.result.movie.title];
+        };
+        this.getListInfo = function() {
+          return new ListInfo('movie', this.result.movie.title, this.result.movie.ids.amgMovieId, this.result.movie.ids.cosmoId, '', '', '', '');
+        };
+      }
+      function RoviNameResult(result) {
+        this.result = result;
+        this.getImageUrl = function() {
+          return getBestImageUrl(this.result.name.images);
+        };
+        this.getName = function() {
+          return [this.result.name.name];
+        };
+        this.getListInfo = function() {
+          return new ListInfo('name', this.result.name.name, this.result.name.ids.amgMovieId, this.result.name.ids.cosmoId, this.result.name.primaryMedia, this.result.name.period, this.result.name.birth.date, '');
+        };
+      }
+      function RoviUnknownResult(result) {
+        this.result = result;
+        this.getImageUrl = function() {
+          return '';
+        };
+        this.getName = function() {
+          return ['Unknown type: ' + result.type];
+        };
+        this.getListInfo = function() {
+          return new ListInfo('unknown', 'Unknown type', null, null, result.type, '', '', '');
+        };
+      }
+      function RoviVideoResult(result) {
+        this.result = result;
+        this.getImageUrl = function() {
+          return getBestImageUrl(this.result.video.images);
+        };
+        this.getName = function() {
+          return [this.result.video.masterTitle,
+            this.result.video.programType,
+            this.result.video.subcategory,
+            this.result.video.releaseYear];
+        };
+        this.getListInfo = function() {
+          return new ListInfo('video', this.result.video.masterTitle, this.result.video.ids.amgMovieId, this.result.video.ids.cosmoId, this.result.video.programType, this.result.video.subcategory, this.result.video.releaseYear, this.result.video.programLanguage);
+        };
+      }
+      function RoviSearchResponse(data) {
+        this.data = data;
+        this.results = [];
+        if (data.searchResponse) {
+          if (data.searchResponse.results) {
+            var self = this;
+            data.searchResponse.results.forEach(function (result) {
+              if (result.movie) {
+                self.results.push(new RoviMovieResult(result));
+              } else if (result.name) {
+                self.results.push(new RoviNameResult(result));
+              } else if (result.video) {
+                self.results.push(new RoviVideoResult(result));
+              } else {
+                self.results.push(new RovUnknownResult(result));
+              }
+            });
+          }
+        }
+        this.getResults = function () {
+          return this.results;
+        }
+      }
+      function RoviFindResponse(data) {
+        this.data = data;
+        if (data.movie) {
+          this.result = new RoviMovieResult(data);
+        } else if (data.name) {
+          this.result = new RoviNameResult(data);
+        } else if (data.video) {
+          this.result = new RoviVideoResult(data);
+        } else {
+          this.result = new RoviUnknownResult(data);
+        }
+        this.getResult = function () {
+          return this.result;
+        }
+      }
+      function ListInfo(type, name, amgMovieId, cosmoId, line2, line3, line4, line5) {
+        this.type = type;
+        this.name = name;
+        this.amgMovieId = amgMovieId;
+        this.cosmoId = cosmoId;
+        this.line2 = line2;
+        this.line3 = line3;
+        this.line4 = line4;
+        this.line5 = line5;
+      }
+    </script>
+    <script type="text/javascript">
+      var app = angular.module("app", ['ngSanitize']);
+      app.controller('SimpsonsCtrl', ['$scope', '$http', '$log', function SimpsonsCtrl($scope, $http, $log) {
+        $scope.q = '';
+        $scope.findResponse = new RoviFindResponse({});
+        $scope.searchResponse = new RoviSearchResponse({});
+        $scope.result = {};
+        $scope.imageUrl = "";
+        $scope.mode = 'list';
+        $scope.isListMode = function () {
+          return $scope.mode == 'list';
+        };
+        $scope.isDetailMode = function () {
+          return $scope.mode == 'detail';
+        };
+        $scope.setMode = function (mode) {
+          if (mode == 'list') {
+            if ($scope.mode != 'list') {
+              $scope.mode = 'list';
+            }
+          } else if (mode == 'detail') {
+            if ($scope.mode != 'detail') {
+              $scope.mode = 'detail';
+            }
+          } else {
+            $log.info('No such mode: ' + mode);
+          }
+        }
+        $scope.getSimpsons = function() {
+          $http.get("/simpsons").
+            success(function (data, status, headers, config) {
+              $log.info("success: " + data);
+              $scope.result = data;
+              if (data.video) {
+                $scope.imageUrl = data.video.images[0].url;
+              }
+            }).
+            error( function (data, status, headers, config) {
+              $log.info("error: " + status);
+            });
+        };
+        $scope.searchSimpsons = function() {
+          $http.get("/search/simpsons").
+            success(function (data, status, headers, config) {
+              $log.info("success: " + data);
+              $scope.result = data;
+              if (data.searchResponse.results[0].movie) {
+                $scope.imageUrl = data.searchResponse.results[0].movie.images[0].url;
+              }
+            }).
+            error( function (data, status, headers, config) {
+              $log.info("error: " + status);
+            });
+        };
+        $scope.search = function() {
+          $http.get("/search?q=" + encodeURIComponent($scope.q)).
+            success(function (data, status, headers, config) {
+              $log.info("success: " + data);
+              $scope.result = data;
+              if (data.searchResponse.results[0].movie) {
+                $scope.imageUrl = data.searchResponse.results[0].movie.images[0].url;
+              }
+              $scope.searchResponse = new RoviSearchResponse(data);
+              $scope.setMode('list');
+            }).
+            error( function (data, status, headers, config) {
+              $log.info("error: " + status);
+            });
+        };
+        $scope.find = function (type, amgMovieId, cosmoId) {
+          var stype;
+          if (type == 'name') {
+            stype = 'name';
+          } else {
+            stype = 'video';
+          }
+          $http.get("/find?type=" + encodeURIComponent(stype) + "&amgMoveId=" + amgMovieId + "&cosmoId=" + cosmoId).
+            success(function (data, status, headers, config) {
+              $log.info("success: " + data);
+              $scope.result = data;
+              
+              if (data.video) {
+                $scope.imageUrl = data.video.images[0].url;
+              }
+              
+              $scope.findResponse = new RoviFindResponse(data);
+              $scope.setMode('detail');
+            }).
+            error( function (data, status, headers, config) {
+              $log.info("error: " + status);
+            });
+        };
+        $scope.resultAsJson = function () {
+          return angular.toJson($scope.result, true);
+        };
+        $scope.firstImageUrl = function () {
+          return $scope.imageUrl;
+        };
+        $scope.getResults = function() {
+          if ($scope.result.searchResponse) {
+            return $scope.result.searchResponse.results;
+          }
+          return [];
+        };
+        $scope.getSearchResults = function() {
+          return $scope.searchResponse.getResults();
+        };
+        $scope.getFindResult = function () {
+          return $scope.findResponse.getResult();
+        }
+        $scope.getImage = function(result) {
+          var images = [];
+          if (result.type == 'credit' && result.name) {
+            images = result.name.images || [];
+          } else if ((result.type == 'movie' || result.type == 'tvseries') && result.movie) {
+            images = result.movie.images || [];
+          } else if ((result.type == 'movie' || result.type == 'tvseries') && result.video) {
+            images = result.video.images || [];
+          }
+          var imageUrl = "";
+          var imageHeight = 0;
+          images.forEach(function (image) {
+            //console.log('image.height ' + image.height + ' imageHeight ' + imageHeight + ' image.url ' + image.url + ' imageUrl ' + imageUrl);
+            if (image.height > imageHeight && image.height <= 480 && (image.url.lastIndexOf("http", 0) == 0)) {
+              imageUrl = image.url;
+              imageHeight = image.height;
+            }
+          });
+          //console.log('return imageUrl ' + imageUrl);
+          return imageUrl;
+        };
+        $scope.getName = function(result) {
+          if (result.type == 'credit' && result.name) {
+            return result.name.name;
+          }
+          if ((result.type == 'movie' || result.type == 'tvseries') && result.movie) {
+            return result.movie.title;
+          }
+          if ((result.type == 'movie' || result.type == 'tvseries') && result.video) {
+            return result.video.masterTitle;
+          }
+          return "";
+        };
+        $scope.formatName = function (name) {
+          return name.join('<br/>');
+        }
+      }]);
+    </script>
+  </body>
+</html>
