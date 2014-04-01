@@ -14,10 +14,6 @@
         <div class="col-md-6">
         </div>
         <div class="col-md-6">
-          <!--
-          <button class="btn" ng-click="getSimpsons()">Get Simpsons</button>
-          <button class="btn" ng-click="searchSimpsons()">Search Simpsons</button>
-          -->
           <form class="form-inline" ng-submit="search()">
             <input class="form-control" type="text" placeholder="Enter search" name="q" ng-model="q">
             <input class="btn btn-default" type="submit" name="submit" id="submit" value="Search">
@@ -50,143 +46,47 @@
             <img ng-src="{{getFindResult().getImageUrl()}}" width="640" height="480">
           </div>
           <div class="col-md-6">
-            {{getFindResult().getName()}}
+            {{getFindResult().getDetailInfo().name}}<br/>
+            {{getFindResult().getDetailInfo().amgMovieId}}<br/>
+            {{getFindResult().getDetailInfo().cosmoId}}<br/>
+            {{getFindResult().getDetailInfo().line2}}<br/>
+            {{getFindResult().getDetailInfo().line3}}<br/>
+            {{getFindResult().getDetailInfo().line4}}<br/>
+            {{getFindResult().getDetailInfo().line5}}<br/>
+            <div ng-repeat="nameId in getFindResult().getDetailInfo().nameIdArray1">
+              <a ng-click="find(nameId.type, nameId.amgMovieId, nameId.cosmoId)">{{nameId.name}}</a><br/>
+            </div>
+            <div ng-repeat="imageUrl in getFindResult().getDetailInfo().imageUrls">
+              <img ng-src="{{imageUrl}}">
+            </div>
           </div>
         </div>
       </div>
 
-      <img ng-src="{{firstImageUrl()}}">
-      <div>
-        <pre>{{resultAsJson()}}</pre>
+      <div class="row">
+        <div class="col-md-12">
+          <pre>{{responseAsJson()}}</pre>
+        </div>
       </div>
     </div>
+
     <script src="bower_components/angular/angular.min.js"></script>
     <script src="bower_components/angular-sanitize/angular-sanitize.min.js"></script>
-    <script type="text/javascript">
-      function getBestImageUrl(images) {
-          var imageUrl = "";
-          if (images) {
-            var imageHeight = 0;
-            images.forEach(function (image) {
-              //console.log('image.height ' + image.height + ' imageHeight ' + imageHeight + ' image.url ' + image.url + ' imageUrl ' + imageUrl);
-              if (image.height > imageHeight && image.height <= 480 && (image.url.lastIndexOf("http", 0) == 0)) {
-                imageUrl = image.url;
-                imageHeight = image.height;
-              }
-            });
-          }
-          //console.log('return imageUrl ' + imageUrl);
-          return imageUrl;
-      }
-      function RoviMovieResult(result) {
-        this.result = result;
-        this.getImageUrl = function() {
-          return getBestImageUrl(this.result.movie.images);
-        };
-        this.getName = function() {
-          return [this.result.movie.title];
-        };
-        this.getListInfo = function() {
-          return new ListInfo('movie', this.result.movie.title, this.result.movie.ids.amgMovieId, this.result.movie.ids.cosmoId, '', '', '', '');
-        };
-      }
-      function RoviNameResult(result) {
-        this.result = result;
-        this.getImageUrl = function() {
-          return getBestImageUrl(this.result.name.images);
-        };
-        this.getName = function() {
-          return [this.result.name.name];
-        };
-        this.getListInfo = function() {
-          return new ListInfo('name', this.result.name.name, this.result.name.ids.amgMovieId, this.result.name.ids.cosmoId, this.result.name.primaryMedia, this.result.name.period, this.result.name.birth.date, '');
-        };
-      }
-      function RoviUnknownResult(result) {
-        this.result = result;
-        this.getImageUrl = function() {
-          return '';
-        };
-        this.getName = function() {
-          return ['Unknown type: ' + result.type];
-        };
-        this.getListInfo = function() {
-          return new ListInfo('unknown', 'Unknown type', null, null, result.type, '', '', '');
-        };
-      }
-      function RoviVideoResult(result) {
-        this.result = result;
-        this.getImageUrl = function() {
-          return getBestImageUrl(this.result.video.images);
-        };
-        this.getName = function() {
-          return [this.result.video.masterTitle,
-            this.result.video.programType,
-            this.result.video.subcategory,
-            this.result.video.releaseYear];
-        };
-        this.getListInfo = function() {
-          return new ListInfo('video', this.result.video.masterTitle, this.result.video.ids.amgMovieId, this.result.video.ids.cosmoId, this.result.video.programType, this.result.video.subcategory, this.result.video.releaseYear, this.result.video.programLanguage);
-        };
-      }
-      function RoviSearchResponse(data) {
-        this.data = data;
-        this.results = [];
-        if (data.searchResponse) {
-          if (data.searchResponse.results) {
-            var self = this;
-            data.searchResponse.results.forEach(function (result) {
-              if (result.movie) {
-                self.results.push(new RoviMovieResult(result));
-              } else if (result.name) {
-                self.results.push(new RoviNameResult(result));
-              } else if (result.video) {
-                self.results.push(new RoviVideoResult(result));
-              } else {
-                self.results.push(new RovUnknownResult(result));
-              }
-            });
-          }
-        }
-        this.getResults = function () {
-          return this.results;
-        }
-      }
-      function RoviFindResponse(data) {
-        this.data = data;
-        if (data.movie) {
-          this.result = new RoviMovieResult(data);
-        } else if (data.name) {
-          this.result = new RoviNameResult(data);
-        } else if (data.video) {
-          this.result = new RoviVideoResult(data);
-        } else {
-          this.result = new RoviUnknownResult(data);
-        }
-        this.getResult = function () {
-          return this.result;
-        }
-      }
-      function ListInfo(type, name, amgMovieId, cosmoId, line2, line3, line4, line5) {
-        this.type = type;
-        this.name = name;
-        this.amgMovieId = amgMovieId;
-        this.cosmoId = cosmoId;
-        this.line2 = line2;
-        this.line3 = line3;
-        this.line4 = line4;
-        this.line5 = line5;
-      }
-    </script>
+    <script src="rovi-wrappers.js"></script>
     <script type="text/javascript">
       var app = angular.module("app", ['ngSanitize']);
       app.controller('SimpsonsCtrl', ['$scope', '$http', '$log', function SimpsonsCtrl($scope, $http, $log) {
+        // query entered by user
         $scope.q = '';
+
+        // last response from Rovi API
         $scope.findResponse = new RoviFindResponse({});
         $scope.searchResponse = new RoviSearchResponse({});
-        $scope.result = {};
-        $scope.imageUrl = "";
+        $scope.response = {};
+
+        // mode of single-page application
         $scope.mode = 'list';
+        
         $scope.isListMode = function () {
           return $scope.mode == 'list';
         };
@@ -206,40 +106,12 @@
             $log.info('No such mode: ' + mode);
           }
         }
-        $scope.getSimpsons = function() {
-          $http.get("/simpsons").
-            success(function (data, status, headers, config) {
-              $log.info("success: " + data);
-              $scope.result = data;
-              if (data.video) {
-                $scope.imageUrl = data.video.images[0].url;
-              }
-            }).
-            error( function (data, status, headers, config) {
-              $log.info("error: " + status);
-            });
-        };
-        $scope.searchSimpsons = function() {
-          $http.get("/search/simpsons").
-            success(function (data, status, headers, config) {
-              $log.info("success: " + data);
-              $scope.result = data;
-              if (data.searchResponse.results[0].movie) {
-                $scope.imageUrl = data.searchResponse.results[0].movie.images[0].url;
-              }
-            }).
-            error( function (data, status, headers, config) {
-              $log.info("error: " + status);
-            });
-        };
+
         $scope.search = function() {
           $http.get("/search?q=" + encodeURIComponent($scope.q)).
             success(function (data, status, headers, config) {
-              $log.info("success: " + data);
-              $scope.result = data;
-              if (data.searchResponse.results[0].movie) {
-                $scope.imageUrl = data.searchResponse.results[0].movie.images[0].url;
-              }
+              $log.info("success: " + angular.toJson(data));
+              $scope.response = data;
               $scope.searchResponse = new RoviSearchResponse(data);
               $scope.setMode('list');
             }).
@@ -254,15 +126,10 @@
           } else {
             stype = 'video';
           }
-          $http.get("/find?type=" + encodeURIComponent(stype) + "&amgMoveId=" + amgMovieId + "&cosmoId=" + cosmoId).
+          $http.get("/find?type=" + encodeURIComponent(stype) + "&amgMovieId=" + amgMovieId + "&cosmoId=" + cosmoId).
             success(function (data, status, headers, config) {
-              $log.info("success: " + data);
-              $scope.result = data;
-              
-              if (data.video) {
-                $scope.imageUrl = data.video.images[0].url;
-              }
-              
+              $log.info("success: " + angular.toJson(data));
+              $scope.response = data;
               $scope.findResponse = new RoviFindResponse(data);
               $scope.setMode('detail');
             }).
@@ -270,60 +137,16 @@
               $log.info("error: " + status);
             });
         };
-        $scope.resultAsJson = function () {
-          return angular.toJson($scope.result, true);
-        };
-        $scope.firstImageUrl = function () {
-          return $scope.imageUrl;
-        };
-        $scope.getResults = function() {
-          if ($scope.result.searchResponse) {
-            return $scope.result.searchResponse.results;
-          }
-          return [];
-        };
         $scope.getSearchResults = function() {
           return $scope.searchResponse.getResults();
         };
         $scope.getFindResult = function () {
           return $scope.findResponse.getResult();
         }
-        $scope.getImage = function(result) {
-          var images = [];
-          if (result.type == 'credit' && result.name) {
-            images = result.name.images || [];
-          } else if ((result.type == 'movie' || result.type == 'tvseries') && result.movie) {
-            images = result.movie.images || [];
-          } else if ((result.type == 'movie' || result.type == 'tvseries') && result.video) {
-            images = result.video.images || [];
-          }
-          var imageUrl = "";
-          var imageHeight = 0;
-          images.forEach(function (image) {
-            //console.log('image.height ' + image.height + ' imageHeight ' + imageHeight + ' image.url ' + image.url + ' imageUrl ' + imageUrl);
-            if (image.height > imageHeight && image.height <= 480 && (image.url.lastIndexOf("http", 0) == 0)) {
-              imageUrl = image.url;
-              imageHeight = image.height;
-            }
-          });
-          //console.log('return imageUrl ' + imageUrl);
-          return imageUrl;
+
+        $scope.responseAsJson = function () {
+          return angular.toJson($scope.response, true);
         };
-        $scope.getName = function(result) {
-          if (result.type == 'credit' && result.name) {
-            return result.name.name;
-          }
-          if ((result.type == 'movie' || result.type == 'tvseries') && result.movie) {
-            return result.movie.title;
-          }
-          if ((result.type == 'movie' || result.type == 'tvseries') && result.video) {
-            return result.video.masterTitle;
-          }
-          return "";
-        };
-        $scope.formatName = function (name) {
-          return name.join('<br/>');
-        }
       }]);
     </script>
   </body>
