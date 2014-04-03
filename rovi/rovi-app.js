@@ -22,7 +22,7 @@ app.use(cors());
 app.set('port', 3000);
 
 app.get('/find', function(req, res) {
-    var squery = {include:["images","cast","synopsis","filmography"], imagesize:"480-720x360-540", apikey:apikey, sig:roviapi.genSig(apikey, secret), format:"json"};    
+    var squery = {include:["images","cast","synopsis","filmography"], imagesize:"360-640x270-480", apikey:apikey, sig:roviapi.genSig(apikey, secret), format:"json"};    
     var type = req.param("type");
     if (type != 'video' && type != 'name') {
         console.log('Unknown type: ' + type);

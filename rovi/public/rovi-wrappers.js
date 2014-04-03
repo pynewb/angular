@@ -1,10 +1,43 @@
-function getBestImageUrl(images) {
+/*
+ *  TODO: improve the following
+ *
+ *  1. search David Duchovny
+ *  2. response has a David Duchovny with both cosmoId and amgMovieId, but only getty images
+ *  3. click on David Duchovny gets metadata by cosmoid
+ *  4. response has a David Duchovny with both cosmoId and amgMovieId, AMG genres, usable images, but only AMG ids in filmography which is in no particular order
+ *  5. click on The X-Files: I Want To Believe gets metadata by amgMovieId
+ *  6. response has both cosmoId and [amg]movieId, AMG genres, only a couple usable images, but only AMG ids in a pretty thorough cast
+ *  7. click on David Duchovny gets metadata by amgMoveId
+ *  8. response has a David Duchovny with both cosmoId and amgMovieId, AMG genres, usable images, but only AMG ids in filmography which is in no particular order
+ *
+ *  1. search X-Files
+ *  2. response has series with cosmoId, The X-Files: I Want to Believe with cosmoId, and The X-Files with only cosmoId; all with images
+ *  3. click on The X-Files: I Want To Believe gets metadata by cosmoid
+ *  4. response has only cosmoId, cosmo subcategory, usable images, less thorough cast with nameUri containing cosmoId and cast images largely getty
+ *  5. click on Gillian Anderson gets metadata by cosmoid
+ *  6. response has both cosmoId and amgMovieId, AMG genres, usable images, but only AMG ids in filmography which is in no particular order
+ *  7. click on The X-Files: I Want To Believe gets metadata by amgMovieId
+ *  8. response has both cosmoId and [amg]movieId, AMG genres, only a couple usable images, but only AMG ids in a pretty thorough cast
+ *  9. click on Gillian Anderson gets metadata by amgMovieId
+ *  10. response has both cosmoId and amgMovieId, AMG genres, usable images, but only AMG ids in filmography which is in no particular order
+ *
+ *  As long as person has both amg and cosmo ids, searching on name gives consistent results
+ *  regardless of which id is used.
+ *  
+ *  Other than search results, there are no direct paths to cosmoIds for video works.  Maybe a better
+ *  approach is to continue to get the video work from the AMG Movie service, but if that returns
+ *  a cosmoId, also grab the video work from the video service, and perhaps even coalesce the results.
+ */
+function RoviResult () {
+}
+RoviResult.getBestImageUrl = function (images) {
     var imageUrl = "";
     if (images) {
+      // TODO: consider imageTypeId, zoomLevel, the calculated aspect ratio and availability (non-Getty)
       var imageHeight = 0;
       images.forEach(function (image) {
         //console.log('image.height ' + image.height + ' imageHeight ' + imageHeight + ' image.url ' + image.url + ' imageUrl ' + imageUrl);
-        if (image.height > imageHeight && image.height <= 480 && (image.url.lastIndexOf("http", 0) == 0)) {
+        if (image.height > imageHeight && image.height <= 640 && (image.url.lastIndexOf("http", 0) == 0)) {
           imageUrl = image.url;
           imageHeight = image.height;
         }
@@ -13,7 +46,7 @@ function getBestImageUrl(images) {
     //console.log('return imageUrl ' + imageUrl);
     return imageUrl;
 }
-function getImageUrls(images) {
+RoviResult.getImageUrls = function (images) {
     var imageUrls = [];
     if (images) {
       images.forEach(function (image) {
@@ -36,10 +69,10 @@ function RoviMovieResult(result) {
       self.credits.push(new NameId('name', credit.name, credit.id, null));
     });
   }
-  this.imageUrls = getImageUrls(this.result.movie.images);
+  this.imageUrls = RoviResult.getImageUrls(this.result.movie.images);
 }
 RoviMovieResult.prototype.getImageUrl = function() {
-  return getBestImageUrl(this.result.movie.images);
+  return RoviResult.getBestImageUrl(this.result.movie.images);
 };
 RoviMovieResult.prototype.getName = function() {
   return [this.result.movie.title];
@@ -60,10 +93,10 @@ function RoviNameResult(result) {
       self.credits.push(new NameId('video', credit.title, credit.id, null));
     });
   }
-  this.imageUrls = getImageUrls(this.result.name.images);
+  this.imageUrls = RoviResult.getImageUrls(this.result.name.images);
 }
 RoviNameResult.prototype.getImageUrl = function() {
-  return getBestImageUrl(this.result.name.images);
+  return RoviResult.getBestImageUrl(this.result.name.images);
 };
 RoviNameResult.prototype.getName = function() {
   return [this.result.name.name];
@@ -109,13 +142,13 @@ function RoviVideoResult(result) {
       if (matchAmgMovieId) {
         amgMovieId = matchAmgMovieId[1];
       }
-      self.credits.push(new NameId('video', credit.name, amgMovieId, cosmoId));
+      self.credits.push(new NameId('name', credit.name, amgMovieId, cosmoId));
     });
   }
-  this.imageUrls = getImageUrls(this.result.video.images)
+  this.imageUrls = RoviResult.getImageUrls(this.result.video.images)
 }
 RoviVideoResult.prototype.getImageUrl = function() {
-  return getBestImageUrl(this.result.video.images);
+  return RoviResult.getBestImageUrl(this.result.video.images);
 };
 RoviVideoResult.prototype.getName = function() {
   return [this.result.video.masterTitle,

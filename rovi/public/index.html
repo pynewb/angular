@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Simpsons Experiment</title>
+    <title>First Rovi API Experiment</title>
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
   </head>
@@ -15,8 +15,13 @@
         </div>
         <div class="col-md-6">
           <form class="form-inline" ng-submit="search()">
-            <input class="form-control" type="text" placeholder="Enter search" name="q" ng-model="q">
-            <input class="btn btn-default" type="submit" name="submit" id="submit" value="Search">
+            <div class="form-group has-feedback">
+              <input class="form-control" type="text" placeholder="Enter search" name="q" id="q" ng-model="q">
+              <span class="glyphicon glyphicon-search form-control-feedback"></span>
+            </div>
+            <div class="form-group">
+              <input class="btn btn-default" type="submit" name="submit" id="submit" value="Search">
+            </div>
           </form>
         </div>
       </div>
@@ -75,13 +80,23 @@
     <script src="rovi-wrappers.js"></script>
     <script type="text/javascript">
       var app = angular.module("app", ['ngSanitize']);
-      app.controller('SimpsonsCtrl', ['$scope', '$http', '$log', function SimpsonsCtrl($scope, $http, $log) {
+
+      app.service('RoviWrapperFoundry', ['$log', function RoviWrapperFoundry($log) {
+        this.findResponse = function (data) {
+          return new RoviFindResponse(data);
+        };
+        this.searchResponse = function (data) {
+          return new RoviSearchResponse(data);
+        }
+      }]);
+      
+      app.controller('SimpsonsCtrl', ['$scope', '$http', '$log', 'RoviWrapperFoundry', function SimpsonsCtrl($scope, $http, $log, roviWrapperFoundry) {
         // query entered by user
         $scope.q = '';
 
         // last response from Rovi API
-        $scope.findResponse = new RoviFindResponse({});
-        $scope.searchResponse = new RoviSearchResponse({});
+        $scope.findResponse = roviWrapperFoundry.findResponse({});
+        $scope.searchResponse = roviWrapperFoundry.searchResponse({});
         $scope.response = {};
 
         // mode of single-page application
@@ -112,7 +127,7 @@
             success(function (data, status, headers, config) {
               $log.info("success: " + angular.toJson(data));
               $scope.response = data;
-              $scope.searchResponse = new RoviSearchResponse(data);
+              $scope.searchResponse = roviWrapperFoundry.searchResponse(data);
               $scope.setMode('list');
             }).
             error( function (data, status, headers, config) {
@@ -130,7 +145,8 @@
             success(function (data, status, headers, config) {
               $log.info("success: " + angular.toJson(data));
               $scope.response = data;
-              $scope.findResponse = new RoviFindResponse(data);
+              $scope.findResponse = roviWrapperFoundry.findResponse(data);
+              // TODO: if type == 'video' and !cosmodId, check response for cosmoId and fetch that if present
               $scope.setMode('detail');
             }).
             error( function (data, status, headers, config) {
