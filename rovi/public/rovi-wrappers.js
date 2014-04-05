@@ -34,17 +34,19 @@ RoviResult.getBestImageUrl = function (images) {
     var imageUrl = "";
     if (images) {
       // TODO: consider imageTypeId, zoomLevel, the calculated aspect ratio and availability (non-Getty)
-      var imageHeight = 0;
+      var aspectRatio = 100;
       var imageFound = false;
       images.forEach(function (image) {
         //console.log('image.height ' + image.height + ' imageHeight ' + imageHeight + ' image.url ' + image.url + ' imageUrl ' + imageUrl);
-        if ((!imageFound) && image.height > imageHeight && image.height <= 640 && (image.url.lastIndexOf("http", 0) == 0)) {
-          imageUrl = image.url;
-          imageHeight = image.height;
-          aspectRatio = image.width / image.height;
-          if (aspectRatio > 0.74 && aspectRatio < 0.76) {
-            imageFound = true;
-          }
+        if ((!imageFound) && (image.url.lastIndexOf("http", 0) == 0)) {
+            thisAspectRatio = image.width / image.height;
+            if ((thisAspectRatio > 0.74 && thisAspectRatio < aspectRatio) || (aspectRatio == 100)) {
+              imageUrl = image.url;
+              aspectRatio = thisAspectRatio;
+              if (aspectRatio > 0.74 && aspectRatio < 0.76) {
+                imageFound = true;
+              }
+            }
         }
       });
     }
