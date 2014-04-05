@@ -24,7 +24,12 @@ app.set('port', 3000);
 app.get('/find', function(req, res) {
     var squery = {include:["images","cast","synopsis","filmography"], imagesize:"360-640x270-480", apikey:apikey, sig:roviapi.genSig(apikey, secret), format:"json"};    
     var type = req.param("type");
-    if (type != 'video' && type != 'name') {
+    if (type == 'video') {
+        squery['imagetypeid'] = [31, 27, 7, 4, 5, 3];
+    } else if (type == 'name') {
+        // imagetypeid 17 (celebrity) is getty
+        squery['imagetypeid'] = [4, 5, 3, 31, 27, 7];
+    } else {
         console.log('Unknown type: ' + type);
         res.statusCode = 500;
         res.end();

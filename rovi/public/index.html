@@ -30,7 +30,7 @@
       <div ng-show="isListMode()">
         <div class="row" ng-repeat="result in getSearchResults()">
           <div class="col-md-4">
-           <img ng-src="{{result.getImageUrl()}}" width="320" height="240">
+           <img ng-src="{{result.getImageUrl()}}" width="180" height="240">
           </div>
           <div class="col-md-8">
             <a ng-click="find(result.getListInfo().type, result.getListInfo().amgMovieId, result.getListInfo().cosmoId)">{{result.getListInfo().name}}</a><br/>
@@ -48,7 +48,7 @@
       <div ng-show="isDetailMode()">
         <div class="row">
           <div class="col-md-6">
-            <img ng-src="{{getFindResult().getImageUrl()}}" width="640" height="480">
+            <img ng-src="{{getFindResult().getImageUrl()}}" width="360" height="480">
           </div>
           <div class="col-md-6">
             {{getFindResult().getDetailInfo().name}}<br/>
