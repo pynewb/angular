@@ -43,7 +43,7 @@ RoviResult.getBestImageUrl = function (images) {
             if ((thisAspectRatio > 0.74 && thisAspectRatio < aspectRatio) || (aspectRatio == 100)) {
               imageUrl = image.url;
               aspectRatio = thisAspectRatio;
-              if (aspectRatio > 0.74 && aspectRatio < 0.76) {
+              if (aspectRatio > 0.74 && aspectRatio < 0.76  && image.width >= 270) {
                 imageFound = true;
               }
             }
@@ -73,7 +73,14 @@ function RoviMovieResult(result) {
   if (this.result.movie.cast) {
     var self = this;
     this.result.movie.cast.forEach(function (credit) {
-      self.credits.push(new NameId('name', credit.name, credit.id, null));
+      self.credits.push(new NameId('name', credit.name, credit.role + ': ' + credit.partName, credit.id, null));
+    });
+  }
+  this.crew = [];
+  if (this.result.movie.crew) {
+    var self = this;
+    this.result.movie.crew.forEach(function (crew) {
+      self.crew.push(new NameId('name', crew.name, crew.role, crew.id, null));
     });
   }
   this.imageUrls = RoviResult.getImageUrls(this.result.movie.images);
@@ -85,7 +92,7 @@ RoviMovieResult.prototype.getName = function() {
   return [this.result.movie.title];
 };
 RoviMovieResult.prototype.getDetailInfo = function() {
-  return new DetailInfo('movie', this.result.movie.title, this.result.movie.ids.movieId, this.result.movie.ids.cosmoId, this.imageUrls, '', '', this.result.movie.releaseYear, '', this.credits);
+  return new DetailInfo('movie', this.result.movie.title, this.result.movie.ids.movieId, this.result.movie.ids.cosmoId, this.imageUrls, '', '', this.result.movie.releaseYear, '', this.result.movie.movieRating || this.result.movie.tvRating, this.result.movie.synopsis.synopsis, this.credits, this.crew);
 };
 RoviMovieResult.prototype.getListInfo = function() {
   return new ListInfo('movie', this.result.movie.title, this.result.movie.ids.movieId, this.result.movie.ids.cosmoId, '', '', '', '');
@@ -97,9 +104,10 @@ function RoviNameResult(result) {
   if (this.result.name.filmography) {
     var self = this;
     this.result.name.filmography.forEach(function (credit) {
-      self.credits.push(new NameId('video', credit.title, credit.id, null));
+      self.credits.push(new NameId('video', credit.title, '', credit.id, null));
     });
   }
+  this.cast = [];
   this.imageUrls = RoviResult.getImageUrls(this.result.name.images);
 }
 RoviNameResult.prototype.getImageUrl = function() {
@@ -109,7 +117,7 @@ RoviNameResult.prototype.getName = function() {
   return [this.result.name.name];
 };
 RoviNameResult.prototype.getDetailInfo = function() {
-  return new DetailInfo('name', this.result.name.name, this.result.name.ids.amgMovieId, this.result.name.ids.cosmoId, this.imageUrls, this.result.name.primaryMedia, this.result.name.period, this.result.name.birth.date, '', this.credits);
+  return new DetailInfo('name', this.result.name.name, this.result.name.ids.amgMovieId, this.result.name.ids.cosmoId, this.imageUrls, this.result.name.primaryMedia, this.result.name.period, this.result.name.birth.date, '', '', '', this.credits, this.cast);
 };
 RoviNameResult.prototype.getListInfo = function() {
   return new ListInfo('name', this.result.name.name, this.result.name.ids.amgMovieId, this.result.name.ids.cosmoId, this.result.name.primaryMedia, this.result.name.period, this.result.name.birth.date, '');
@@ -118,6 +126,7 @@ RoviNameResult.prototype.getListInfo = function() {
 function RoviUnknownResult(result) {
   this.result = result;
   this.credits = [];
+  this.crew = []
   this.imageUrls = [];
 }
 RoviUnknownResult.prototype.getImageUrl = function() {
@@ -127,7 +136,7 @@ RoviUnknownResult.prototype.getName = function() {
   return ['Unknown type: ' + this.result.type];
 };
 RoviUnknownResult.prototype.getDetailInfo = function() {
-  return new DetailInfo('unknown', 'Unknown type', null, null, this.imageUrls, this.result.type, '', '', '', '', this.credits);
+  return new DetailInfo('unknown', 'Unknown type', null, null, this.imageUrls, this.result.type, '', '', '', '', '', '', this.credits, this.crew);
 };
 RoviUnknownResult.prototype.getListInfo = function() {
   return new ListInfo('unknown', 'Unknown type', null, null, this.result.type, '', '', '');
@@ -149,7 +158,24 @@ function RoviVideoResult(result) {
       if (matchAmgMovieId) {
         amgMovieId = matchAmgMovieId[1];
       }
-      self.credits.push(new NameId('name', credit.name, amgMovieId, cosmoId));
+      self.credits.push(new NameId('name', credit.name, credit.role + ': ' + credit.partName, amgMovieId, cosmoId));
+    });
+  }
+  this.crew = [];
+  if (this.result.video.crew) {
+    var self = this;
+    this.result.video.crew.forEach(function (crew) {
+      var matchCosmoId = crew.nameUri.match(/&cosmoid=(\d+)&/i);
+      var cosmoId = null;
+      if (matchCosmoId) {
+        cosmoId = matchCosmoId[1];
+      }
+      var matchAmgMovieId = crew.nameUri.match(/&amgmovieid=(.+)&/i);
+      var amgMovieId = null;
+      if (matchAmgMovieId) {
+        amgMovieId = matchAmgMovieId[1];
+      }
+      self.crew.push(new NameId('name', crew.name, crew.role, amgMovieId, cosmoId));
     });
   }
   this.imageUrls = RoviResult.getImageUrls(this.result.video.images)
@@ -164,7 +190,7 @@ RoviVideoResult.prototype.getName = function() {
     this.result.video.releaseYear];
 };
 RoviVideoResult.prototype.getDetailInfo = function() {
-  return new DetailInfo('video', this.result.video.masterTitle, this.result.video.ids.amgMovieId, this.result.video.ids.cosmoId, this.imageUrls, this.result.video.programType, this.result.video.subcategory, this.result.video.releaseYear, this.result.video.programLanguage, this.credits);
+  return new DetailInfo('video', this.result.video.masterTitle, this.result.video.ids.amgMovieId, this.result.video.ids.cosmoId, this.imageUrls, this.result.video.programType, this.result.video.subcategory, this.result.video.releaseYear, this.result.video.programLanguage, this.result.video.movieRating || this.result.video.tvRating, this.result.video.synopsis.synopsis, this.credits, this.crew);
 };
 RoviVideoResult.prototype.getListInfo = function() {
   return new ListInfo('video', this.result.video.masterTitle, this.result.video.ids.amgMovieId, this.result.video.ids.cosmoId, this.result.video.programType, this.result.video.subcategory, this.result.video.releaseYear, this.result.video.programLanguage);
@@ -210,13 +236,14 @@ RoviFindResponse.prototype.getResult = function () {
   return this.result;
 };
 
-function NameId(type, name, amgMovieId, cosmoId) {
+function NameId(type, name, text, amgMovieId, cosmoId) {
     this.type = type;
     this.name = name;
+    this.text = text;
     this.amgMovieId = amgMovieId;
     this.cosmoId = cosmoId;
 }
-function DetailInfo(type, name, amgMovieId, cosmoId, imageUrls, line2, line3, line4, line5, nameIdArray1) {
+function DetailInfo(type, name, amgMovieId, cosmoId, imageUrls, line2, line3, line4, line5, line6, text, nameIdArray1, nameIdArray2) {
   this.type = type;
   this.name = name;
   this.amgMovieId = amgMovieId;
@@ -226,7 +253,10 @@ function DetailInfo(type, name, amgMovieId, cosmoId, imageUrls, line2, line3, li
   this.line3 = line3;
   this.line4 = line4;
   this.line5 = line5;
+  this.line6 = line6;
+  this.text = text;
   this.nameIdArray1 = nameIdArray1;
+  this.nameIdArray2 = nameIdArray2;
 }
 
 function ListInfo(type, name, amgMovieId, cosmoId, line2, line3, line4, line5) {

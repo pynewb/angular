@@ -55,8 +55,13 @@
             {{getFindResult().getDetailInfo().line3}}<br/>
             {{getFindResult().getDetailInfo().line4}}<br/>
             {{getFindResult().getDetailInfo().line5}}<br/>
+            {{getFindResult().getDetailInfo().line6}}<br/>
+            {{getFindResult().getDetailInfo().text}}<br/>
             <div ng-repeat="nameId in getFindResult().getDetailInfo().nameIdArray1">
-              <a ng-click="find(nameId.type, nameId.amgMovieId, nameId.cosmoId)">{{nameId.name}}</a><br/>
+              <a ng-click="find(nameId.type, nameId.amgMovieId, nameId.cosmoId)">{{nameId.name}}</a> <i>{{nameId.text}}</i><br/>
+            </div>
+            <div ng-repeat="nameId in getFindResult().getDetailInfo().nameIdArray2">
+              <a ng-click="find(nameId.type, nameId.amgMovieId, nameId.cosmoId)">{{nameId.name}}</a> <i>{{nameId.text}}</i><br/>
             </div>
             <div ng-repeat="imageUrl in getFindResult().getDetailInfo().imageUrls">
               <img ng-src="{{imageUrl}}">

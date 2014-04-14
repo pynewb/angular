@@ -22,7 +22,7 @@ app.use(cors());
 app.set('port', 3000);
 
 app.get('/find', function(req, res) {
-    var squery = {include:["images","cast","synopsis","filmography"], imagesize:"360-640x270-480", apikey:apikey, sig:roviapi.genSig(apikey, secret), format:"json"};    
+    var squery = {include:["images","cast","crew","synopsis","filmography"], imagesize:"270-640x270-640", apikey:apikey, sig:roviapi.genSig(apikey, secret), format:"json"};    
     var type = req.param("type");
     if (type == 'video') {
         squery['imagetypeid'] = [31, 27, 7, 4, 5, 3];
@@ -64,7 +64,15 @@ app.get('/find', function(req, res) {
         sheaders['Accept-Language'] = req.get('Accept-Language');
     }
     console.log(sheaders);
-    request.get({url: surl, headers: sheaders}).pipe(res);
+    try {
+        request.get({url: surl, headers: sheaders}).pipe(res);
+    } catch (e) {
+        console.log("Exception in find: " + e);
+        if (!res.headersSent) {
+            res.statusCode = 500;
+        }
+        res.end();
+    }
     //http.get("", function (http_res) {
     //    http_res.on('data', function (chunk) {
     //        res.send(chunk);
@@ -92,7 +100,15 @@ app.get('/search', function(req, res) {
         sheaders['Accept-Language'] = req.get('Accept-Language');
     }
     console.log(sheaders);
-    request.get({url: surl, headers: sheaders}).pipe(res);
+    try {
+        request.get({url: surl, headers: sheaders}).pipe(res);
+    } catch (e) {
+        console.log("Exception in find: " + e);
+        if (!res.headersSent) {
+            res.statusCode = 500;
+        }
+        res.end();
+    }
     
     //http.get("", function (http_res) {
     //    http_res.on('data', function (chunk) {
