@@ -73,7 +73,7 @@ function RoviMovieResult(result) {
   if (this.result.movie.cast) {
     var self = this;
     this.result.movie.cast.forEach(function (credit) {
-      self.credits.push(new NameId('name', credit.name, credit.role + ': ' + credit.partName, credit.id, null));
+      self.credits.push(new NameId('name', credit.name, credit.role, credit.id, null));
     });
   }
   this.crew = [];
@@ -92,7 +92,7 @@ RoviMovieResult.prototype.getName = function() {
   return [this.result.movie.title];
 };
 RoviMovieResult.prototype.getDetailInfo = function() {
-  return new DetailInfo('movie', this.result.movie.title, this.result.movie.ids.movieId, this.result.movie.ids.cosmoId, this.imageUrls, '', '', this.result.movie.releaseYear, '', this.result.movie.movieRating || this.result.movie.tvRating, this.result.movie.synopsis.synopsis, this.credits, this.crew);
+  return new DetailInfo('movie', this.result.movie.title, this.result.movie.ids.movieId, this.result.movie.ids.cosmoId, this.imageUrls, '', '', this.result.movie.releaseYear, this.result.movie.originCountries.join(), this.result.movie.movieRating || this.result.movie.tvRating, this.result.movie.synopsis && this.result.movie.synopsis.synopsis, this.credits, this.crew);
 };
 RoviMovieResult.prototype.getListInfo = function() {
   return new ListInfo('movie', this.result.movie.title, this.result.movie.ids.movieId, this.result.movie.ids.cosmoId, '', '', '', '');
@@ -190,10 +190,10 @@ RoviVideoResult.prototype.getName = function() {
     this.result.video.releaseYear];
 };
 RoviVideoResult.prototype.getDetailInfo = function() {
-  return new DetailInfo('video', this.result.video.masterTitle, this.result.video.ids.amgMovieId, this.result.video.ids.cosmoId, this.imageUrls, this.result.video.programType, this.result.video.subcategory, this.result.video.releaseYear, this.result.video.programLanguage, this.result.video.movieRating || this.result.video.tvRating, this.result.video.synopsis.synopsis, this.credits, this.crew);
+  return new DetailInfo('video', this.result.video.masterTitle, this.result.video.ids.amgMovieId, this.result.video.ids.cosmoId, this.imageUrls, this.result.video.programType, this.result.video.subcategory, this.result.video.releaseYear, this.result.video.originCountries.join(), this.result.video.movieRating || this.result.video.tvRating, this.result.video.synopsis.synopsis, this.credits, this.crew);
 };
 RoviVideoResult.prototype.getListInfo = function() {
-  return new ListInfo('video', this.result.video.masterTitle, this.result.video.ids.amgMovieId, this.result.video.ids.cosmoId, this.result.video.programType, this.result.video.subcategory, this.result.video.releaseYear, this.result.video.programLanguage);
+  return new ListInfo('video', this.result.video.masterTitle, this.result.video.ids.amgMovieId, this.result.video.ids.cosmoId, this.result.video.programType, this.result.video.subcategory, this.result.video.releaseYear, this.result.video.originCountries && this.result.video.originCountries.join());
 };
 
 function RoviSearchResponse(data) {
