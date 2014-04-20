@@ -25,8 +25,8 @@
           </form>
         </div>
       </div>
-      
-      <!-- TODO: ng-show just hides, but code is still evaluated; is there a better alternative? -->
+
+      <!-- TODO: use ngView and routes instead of two divs -->      
       <div ng-show="isListMode()">
         <div class="row" ng-repeat="result in getSearchResults()">
           <div class="col-md-4">
@@ -44,7 +44,6 @@
         </div>
       </div>
 
-      <!-- TODO: ng-show just hides, but code is still evaluated; is there a better alternative? -->
       <div ng-show="isDetailMode()">
         <div class="row">
           <div class="col-md-4">
@@ -86,22 +85,55 @@
     <script type="text/javascript">
       var app = angular.module("app", ['ngSanitize']);
 
-      app.service('RoviWrapperFoundry', ['$log', function RoviWrapperFoundry($log) {
-        this.findResponse = function (data) {
-          return new RoviFindResponse(data);
+      app.service('RoviAPI', ['$http', '$log', function RoviAPI($http, $log) {
+        this.emptyFindResponse = new RoviFindResponse({});
+        this.emptySearchResponse = new RoviSearchResponse({});
+        
+        this.find = function (type, amgMovieId, cosmoId, callback) {
+          var stype;
+          if (type == 'name') {
+            stype = 'name';
+          } else {
+            stype = 'video';
+          }
+          $http.get("/find?type=" + encodeURIComponent(stype) + "&amgMovieId=" + amgMovieId + "&cosmoId=" + cosmoId).
+            success(function (data, status, headers, config) {
+              $log.info("find success: " + angular.toJson(data));
+              // TODO: if type == 'video' and !cosmodId, check response for cosmoId and fetch that if present
+              callback(data, new RoviFindResponse(data), null);
+            }).
+            error(function (data, status, headers, config) {
+              $log.info("find error: " + status);
+              callback(data, null, status);
+            });
         };
-        this.searchResponse = function (data) {
-          return new RoviSearchResponse(data);
-        }
+        this.search = function (q, callback) {
+          $http.get("/search?q=" + encodeURIComponent(q)).
+            success(function (data, status, headers, config) {
+              $log.info("search success: " + angular.toJson(data));
+              callback(data, new RoviSearchResponse(data), null);
+            }).
+            error(function (data, status, headers, config) {
+              $log.info("search error: " + status);
+              callback(data, null, status);
+            });
+        };
+        
+        this.findResponse = function () {
+          return this.emptyFindResponse;
+        };
+        this.searchResponse = function () {
+          return this.emptySearchResponse;
+        };
       }]);
-      
-      app.controller('SimpsonsCtrl', ['$scope', '$http', '$log', 'RoviWrapperFoundry', function SimpsonsCtrl($scope, $http, $log, roviWrapperFoundry) {
+
+      app.controller('SimpsonsCtrl', ['$scope', '$log', 'RoviAPI', function SimpsonsCtrl($scope, $log, roviAPI) {
         // query entered by user
         $scope.q = '';
 
         // last response from Rovi API
-        $scope.findResponse = roviWrapperFoundry.findResponse({});
-        $scope.searchResponse = roviWrapperFoundry.searchResponse({});
+        $scope.findResponse = roviAPI.findResponse();
+        $scope.searchResponse = roviAPI.searchResponse();
         $scope.response = {};
 
         // mode of single-page application
@@ -128,35 +160,26 @@
         }
 
         $scope.search = function() {
-          $http.get("/search?q=" + encodeURIComponent($scope.q)).
-            success(function (data, status, headers, config) {
-              $log.info("success: " + angular.toJson(data));
+          $log.info('API search call');
+          roviAPI.search($scope.q, function (data, response, err) {
+            $log.info('API search callback')
+            if (!err) {
               $scope.response = data;
-              $scope.searchResponse = roviWrapperFoundry.searchResponse(data);
+              $scope.searchResponse = response;
               $scope.setMode('list');
-            }).
-            error( function (data, status, headers, config) {
-              $log.info("error: " + status);
-            });
+            }
+          });
         };
         $scope.find = function (type, amgMovieId, cosmoId) {
-          var stype;
-          if (type == 'name') {
-            stype = 'name';
-          } else {
-            stype = 'video';
-          }
-          $http.get("/find?type=" + encodeURIComponent(stype) + "&amgMovieId=" + amgMovieId + "&cosmoId=" + cosmoId).
-            success(function (data, status, headers, config) {
-              $log.info("success: " + angular.toJson(data));
+          $log.info('API find call');
+          roviAPI.find(type, amgMovieId, cosmoId, function (data, response, err) {
+            $log.info('API find callback');
+            if (!err) {
               $scope.response = data;
-              $scope.findResponse = roviWrapperFoundry.findResponse(data);
-              // TODO: if type == 'video' and !cosmodId, check response for cosmoId and fetch that if present
+              $scope.findResponse = response;
               $scope.setMode('detail');
-            }).
-            error( function (data, status, headers, config) {
-              $log.info("error: " + status);
-            });
+            }
+          });
         };
         $scope.getSearchResults = function() {
           return $scope.searchResponse.getResults();

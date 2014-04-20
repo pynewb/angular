@@ -190,7 +190,7 @@ RoviVideoResult.prototype.getName = function() {
     this.result.video.releaseYear];
 };
 RoviVideoResult.prototype.getDetailInfo = function() {
-  return new DetailInfo('video', this.result.video.masterTitle, this.result.video.ids.amgMovieId, this.result.video.ids.cosmoId, this.imageUrls, this.result.video.programType, this.result.video.subcategory, this.result.video.releaseYear, this.result.video.originCountries.join(), this.result.video.movieRating || this.result.video.tvRating, this.result.video.synopsis.synopsis, this.credits, this.crew);
+  return new DetailInfo('video', this.result.video.masterTitle, this.result.video.ids.amgMovieId, this.result.video.ids.cosmoId, this.imageUrls, this.result.video.programType, this.result.video.subcategory, this.result.video.releaseYear, this.result.video.originCountries && this.result.video.originCountries.join(), this.result.video.movieRating || this.result.video.tvRating, this.result.video.synopsis.synopsis, this.credits, this.crew);
 };
 RoviVideoResult.prototype.getListInfo = function() {
   return new ListInfo('video', this.result.video.masterTitle, this.result.video.ids.amgMovieId, this.result.video.ids.cosmoId, this.result.video.programType, this.result.video.subcategory, this.result.video.releaseYear, this.result.video.originCountries && this.result.video.originCountries.join());
