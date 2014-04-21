@@ -86,6 +86,8 @@
       var app = angular.module("app", ['ngSanitize']);
 
       app.service('RoviAPI', ['$http', '$log', function RoviAPI($http, $log) {
+        var self = this;
+        
         this.emptyFindResponse = new RoviFindResponse({});
         this.emptySearchResponse = new RoviSearchResponse({});
         
@@ -99,23 +101,31 @@
           $http.get("/find?type=" + encodeURIComponent(stype) + "&amgMovieId=" + amgMovieId + "&cosmoId=" + cosmoId).
             success(function (data, status, headers, config) {
               $log.info("find success: " + angular.toJson(data));
+              self.last.data = data;
+              self.last.status = status;
               // TODO: if type == 'video' and !cosmodId, check response for cosmoId and fetch that if present
-              callback(data, new RoviFindResponse(data), null);
+              callback(new RoviFindResponse(data), null);
             }).
             error(function (data, status, headers, config) {
               $log.info("find error: " + status);
-              callback(data, null, status);
+              self.last.data = data;
+              self.last.status = status;
+              callback(null, status);
             });
         };
         this.search = function (q, callback) {
           $http.get("/search?q=" + encodeURIComponent(q)).
             success(function (data, status, headers, config) {
               $log.info("search success: " + angular.toJson(data));
-              callback(data, new RoviSearchResponse(data), null);
+              self.last.data = data;
+              self.last.status = status;
+              callback(new RoviSearchResponse(data), null);
             }).
             error(function (data, status, headers, config) {
               $log.info("search error: " + status);
-              callback(data, null, status);
+              self.last.data = data;
+              self.last.status = status;
+              callback(null, status);
             });
         };
         
@@ -124,6 +134,11 @@
         };
         this.searchResponse = function () {
           return this.emptySearchResponse;
+        };
+        
+        this.last = {
+          data: {},
+          status: ''
         };
       }]);
 
@@ -134,7 +149,7 @@
         // last response from Rovi API
         $scope.findResponse = roviAPI.findResponse();
         $scope.searchResponse = roviAPI.searchResponse();
-        $scope.response = {};
+        $scope.last = roviAPI.last;
 
         // mode of single-page application
         $scope.mode = 'list';
@@ -161,10 +176,9 @@
 
         $scope.search = function() {
           $log.info('API search call');
-          roviAPI.search($scope.q, function (data, response, err) {
-            $log.info('API search callback')
+          roviAPI.search($scope.q, function (response, err) {
+            $log.info('API search callback');
             if (!err) {
-              $scope.response = data;
               $scope.searchResponse = response;
               $scope.setMode('list');
             }
@@ -172,10 +186,9 @@
         };
         $scope.find = function (type, amgMovieId, cosmoId) {
           $log.info('API find call');
-          roviAPI.find(type, amgMovieId, cosmoId, function (data, response, err) {
+          roviAPI.find(type, amgMovieId, cosmoId, function (response, err) {
             $log.info('API find callback');
             if (!err) {
-              $scope.response = data;
               $scope.findResponse = response;
               $scope.setMode('detail');
             }
@@ -189,7 +202,7 @@
         }
 
         $scope.responseAsJson = function () {
-          return angular.toJson($scope.response, true);
+          return angular.toJson($scope.last.data, true);
         };
       }]);
     </script>
