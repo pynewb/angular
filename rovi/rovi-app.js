@@ -21,14 +21,33 @@ app.use(express.bodyParser());
 app.use(cors());
 app.set('port', 3000);
 
+/*
+ *  imagetypeid
+ *      31  vertical showcard (3:4)
+ *      27  poster
+ *      7   box art
+ *      4   gallery: key
+ *      5   gallery: supporting
+ *      3   group
+ *
+ *  formatid (still have to filter results by aspect ratio)
+ *      82  600x800 (600x789, 533x800, 488x600)
+ *      90  240x320 (240x315, 213x320, 195x240)
+ *      94  480x800 (480x640, 480x631, 480x720, 390x480)
+ *      16  500x500 (375x500, 380x500, 333x500, 406x500)
+ *      133 640x480 (360x480, 364x480, 320x480, 480x589)
+ *      96  800x480 (360x480, 364x480, 320x480, 480x589)
+ */
 app.get('/find', function(req, res) {
-    var squery = {include:["images","cast","crew","synopsis","filmography"], imagesize:"270-640x270-640", apikey:apikey, sig:roviapi.genSig(apikey, secret), format:"json"};    
+    var squery = {include:["images","cast","crew","synopsis","filmography"], apikey:apikey, sig:roviapi.genSig(apikey, secret), format:"json"};    
     var type = req.param("type");
     if (type == 'video') {
         squery['imagetypeid'] = [31, 27, 7, 4, 5, 3];
+        squery['formatid'] = [82, 90, 94, 16, 133, 96];
     } else if (type == 'name') {
         // imagetypeid 17 (celebrity) is getty
         squery['imagetypeid'] = [4, 5, 3, 31, 27, 7];
+        squery['formatid'] = [82, 90, 94, 16, 133, 96];
     } else {
         console.log('Unknown type: ' + type);
         res.statusCode = 500;
